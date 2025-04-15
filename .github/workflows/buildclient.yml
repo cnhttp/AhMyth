@@ -12,23 +12,36 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # 升级到最新版
+        uses: actions/checkout@v4
 
-      - name: Set up JDK 8
+      # 先安装 JDK 17（用于 Android SDK 工具）
+      - name: Set up JDK 17 (for Android SDK tools)
         uses: actions/setup-java@v3
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          sdk-platform: android-33  # 使用较新的 Android SDK 版本
-          sdk-build-tools: 34.0.0
-          ndk-version: r25b  # 明确指定 NDK 版本（可选）
+          # 使用 `packages` 替代 `sdk-platform` 和 `sdk-build-tools`
+          packages: |
+            platform-tools
+            platforms;android-33
+            build-tools;34.0.0
+            cmdline-tools;latest
+          # 可选：接受 Android SDK 许可证
+          accept-android-sdk-licenses: true
+
+      # 切换回 JDK 8（用于 AhMyth 编译）
+      - name: Set up JDK 8 (for AhMyth build)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
 
       - name: Cache Gradle
-        uses: actions/cache@v4  # 升级到 v4
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
@@ -45,7 +58,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4  # 升级到最新版
+        uses: actions/upload-artifact@v4
         with:
           name: AhMyth-APK
           path: ./AhMyth-Client/android/app/build/outputs/apk/release/*.apk
