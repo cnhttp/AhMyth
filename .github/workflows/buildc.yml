@@ -1,0 +1,66 @@
+name: Build AhMyth APK
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04  # 明确指定较新版本
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 使用更可靠的 Android SDK 安装方式
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2.0.1  # 使用更稳定的 v2 版本
+        with:
+          licenses: |
+            android-sdk-license
+            android-sdk-preview-license
+            intel-android-extra-license
+            google-gdk-license
+
+      - name: Install Android packages
+        run: |
+          yes | sdkmanager --install "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+          sdkmanager --list  # 验证安装
+
+      # 切换回 JDK 8 用于编译
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v3  # 使用稳定的 v3 版本
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('​**​/*.gradle*', '​**​/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./AhMyth-Client/android/gradlew
+
+      - name: Build APK
+        working-directory: ./AhMyth-Client/android
+        run: ./gradlew assembleRelease
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: AhMyth-APK
+          path: ./AhMyth-Client/android/app/build/outputs/apk/release/*.apk
