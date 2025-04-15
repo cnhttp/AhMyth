@@ -8,11 +8,11 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest  # 使用最新 Runner 镜像
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4  # 升级到最新版
 
       # 先安装 JDK 17（用于 Android SDK 工具）
       - name: Set up JDK 17 (for Android SDK tools)
@@ -24,14 +24,12 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          # 使用 `packages` 替代 `sdk-platform` 和 `sdk-build-tools`
           packages: |
             platform-tools
             platforms;android-33
             build-tools;34.0.0
             cmdline-tools;latest
-          # 可选：接受 Android SDK 许可证
-          accept-android-sdk-licenses: true
+          accept-android-sdk-licenses: true  # 自动接受许可证
 
       # 切换回 JDK 8（用于 AhMyth 编译）
       - name: Set up JDK 8 (for AhMyth build)
@@ -41,7 +39,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Cache Gradle
-        uses: actions/cache@v4
+        uses: actions/cache@v4  # 必须升级到 v3 或 v4
         with:
           path: |
             ~/.gradle/caches
