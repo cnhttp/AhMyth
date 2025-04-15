@@ -8,38 +8,42 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest  # 使用最新 Runner 镜像
+    runs-on: ubuntu-22.04  # 明确指定较新版本
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # 升级到最新版
+        uses: actions/checkout@v4
 
-      # 先安装 JDK 17（用于 Android SDK 工具）
-      - name: Set up JDK 17 (for Android SDK tools)
+      # 使用更可靠的 Android SDK 安装方式
+      - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v2.0.1  # 使用更稳定的 v2 版本
         with:
-          packages: |
-            platform-tools
-            platforms;android-33
-            build-tools;34.0.0
-            cmdline-tools;latest
-          accept-android-sdk-licenses: true  # 自动接受许可证
+          licenses: |
+            android-sdk-license
+            android-sdk-preview-license
+            intel-android-extra-license
+            google-gdk-license
 
-      # 切换回 JDK 8（用于 AhMyth 编译）
-      - name: Set up JDK 8 (for AhMyth build)
+      - name: Install Android packages
+        run: |
+          yes | sdkmanager --install "platform-tools" "platforms;android-30" "build-tools;30.0.3"
+          sdkmanager --list  # 验证安装
+
+      # 切换回 JDK 8 用于编译
+      - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'temurin'
 
       - name: Cache Gradle
-        uses: actions/cache@v4  # 必须升级到 v3 或 v4
+        uses: actions/cache@v3  # 使用稳定的 v3 版本
         with:
           path: |
             ~/.gradle/caches
@@ -56,7 +60,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v3
         with:
           name: AhMyth-APK
           path: ./AhMyth-Client/android/app/build/outputs/apk/release/*.apk
