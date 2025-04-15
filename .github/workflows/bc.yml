@@ -8,20 +8,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # 使用老版本Runner确保兼容性
+    runs-on: ubuntu-20.04  # Legacy runner for compatibility
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3  # 使用旧版checkout
+        uses: actions/checkout@v4  # Update to latest checkout version
 
-      # 设置JDK 8（项目需要旧版Java）
+      # Set up JDK 8
       - name: Set up JDK 8
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v4  # Update to latest setup-java version
         with:
           java-version: '8'
-          distribution: 'zulu'  # 使用Zulu JDK确保稳定性
+          distribution: 'zulu'
 
-      # 手动安装Android SDK 29（兼容旧项目）
+      # Install Android SDK 29
       - name: Install Android SDK
         run: |
           mkdir -p ~/android-sdk
@@ -33,37 +33,37 @@ jobs:
           yes | $HOME/android-sdk/tools/bin/sdkmanager --install "platform-tools" "platforms;android-29" "build-tools;29.0.3"
           yes | $HOME/android-sdk/tools/bin/sdkmanager --licenses || true
 
-      # 创建必要的local.properties
+      # Create local.properties
       - name: Create local.properties
         working-directory: ./AhMyth-Client/android
         run: echo "sdk.dir=$HOME/android-sdk" > local.properties
 
-      # 使用Gradle 4.10.3（适配旧项目）
+      # Use Gradle 4.10.3
       - name: Use legacy Gradle
-        run: |
-          cd ./AhMyth-Client/android
-          ./gradlew wrapper --gradle-version 4.10.3
+        working-directory: ./AhMyth-Client/android
+        run: ./gradlew wrapper --gradle-version 4.10.3
 
-      # 更新为actions/cache@v3（解决弃用警告）
+      # Cache Gradle dependencies
       - name: Cache Gradle
-        uses: actions/cache@v3
+        uses: actions/cache@v4  # Update to latest cache version
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('​**​/*.gradle*', '​**​/gradle-wrapper.properties') }}
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
           restore-keys: |
             gradle-${{ runner.os }}-
 
+      # Build APK
       - name: Build APK
         working-directory: ./AhMyth-Client/android
         run: |
           export ANDROID_HOME=$HOME/android-sdk
           ./gradlew assembleRelease
 
-      # 使用actions/upload-artifact@v3
+      # Upload APK artifact
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4  # Update to latest upload-artifact version
         with:
           name: AhMyth-APK
           path: ./AhMyth-Client/android/app/build/outputs/apk/release/*.apk
