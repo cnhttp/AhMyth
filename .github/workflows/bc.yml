@@ -8,20 +8,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04  # Legacy runner for compatibility
+    runs-on: ubuntu-20.04
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4  # Update to latest checkout version
+        uses: actions/checkout@v4  # 升级到 v4
 
-      # Set up JDK 8
       - name: Set up JDK 8
-        uses: actions/setup-java@v4  # Update to latest setup-java version
+        uses: actions/setup-java@v4  # 升级到 v4
         with:
           java-version: '8'
           distribution: 'zulu'
 
-      # Install Android SDK 29
       - name: Install Android SDK
         run: |
           mkdir -p ~/android-sdk
@@ -33,19 +31,16 @@ jobs:
           yes | $HOME/android-sdk/tools/bin/sdkmanager --install "platform-tools" "platforms;android-29" "build-tools;29.0.3"
           yes | $HOME/android-sdk/tools/bin/sdkmanager --licenses || true
 
-      # Create local.properties
       - name: Create local.properties
         working-directory: ./AhMyth-Client/android
         run: echo "sdk.dir=$HOME/android-sdk" > local.properties
 
-      # Use Gradle 4.10.3
       - name: Use legacy Gradle
         working-directory: ./AhMyth-Client/android
         run: ./gradlew wrapper --gradle-version 4.10.3
 
-      # Cache Gradle dependencies
       - name: Cache Gradle
-        uses: actions/cache@v4  # Update to latest cache version
+        uses: actions/cache@v4  # 升级到 v4
         with:
           path: |
             ~/.gradle/caches
@@ -54,16 +49,14 @@ jobs:
           restore-keys: |
             gradle-${{ runner.os }}-
 
-      # Build APK
       - name: Build APK
         working-directory: ./AhMyth-Client/android
         run: |
           export ANDROID_HOME=$HOME/android-sdk
           ./gradlew assembleRelease
 
-      # Upload APK artifact
       - name: Upload APK artifact
-        uses: actions/upload-artifact@v4  # Update to latest upload-artifact version
+        uses: actions/upload-artifact@v4  # 升级到 v4
         with:
           name: AhMyth-APK
           path: ./AhMyth-Client/android/app/build/outputs/apk/release/*.apk
