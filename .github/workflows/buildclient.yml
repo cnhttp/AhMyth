@@ -1,0 +1,50 @@
+name: Build AhMyth APK
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies
+        run: npm install
+        working-directory: ./AhMyth-Client
+
+      - name: Install apktool
+        run: |
+          wget https://github.com/iBotPeaches/Apktool/releases/download/v2.9.3/apktool_2.9.3.jar -O apktool.jar
+          echo '#!/bin/bash' > apktool
+          echo 'java -jar $PWD/apktool.jar "$@"' >> apktool
+          chmod +x apktool
+          sudo mv apktool /usr/local/bin/
+          sudo mv apktool.jar /usr/local/bin/
+
+      - name: Install Java JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Build APK (custom script or Node command)
+        run: |
+          cd AhMyth-Client
+          npm run build:apk || node path/to/buildScript.js
+
+      - name: Upload built APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: AhMyth-APK
+          path: AhMyth-Client/output/*.apk
